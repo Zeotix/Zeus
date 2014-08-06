@@ -511,6 +511,9 @@ class Game
 		const std::unordered_map<uint32_t, Player*>& getPlayers() const { return players; }
 		const std::map<uint32_t, Npc*>& getNpcs() const { return npcs; }
 		const std::map<uint32_t, Monster*>& getMonsters() const { return monsters; }
+		
+		std::vector<Player*> getPlayersInCast() const;
+		std::vector<Player*> getPlayersInCast(const std::string& password) const;
 
 		void addPlayer(Player* player);
 		void removePlayer(Player* player);
