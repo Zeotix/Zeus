@@ -58,7 +58,10 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 	OutputMessage_ptr output = OutputMessagePool::getInstance()->getOutputMessage(this, false);
 	if (output) {
 		//Update premium days
-		Game::updatePremium(account);
+		if (!accountName.empty()) {
+			//Update premium days
+			g_game.updatePremium(account);
+		}
 
 		//Add MOTD
 		output->AddByte(0x14);
@@ -70,9 +73,10 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 		//Add char list
 		output->AddByte(0x64);
 
-		output->AddByte(1); // number of worlds
+		if (!accountName.empty()) {
+			output->AddByte(1); // number of worlds
 
-		output->AddByte(0); // world id
+		utput->AddByte(0); // world id
 		output->AddString(g_config.getString(ConfigManager::SERVER_NAME));
 		output->AddString(g_config.getString(ConfigManager::IP));
 		output->add<uint16_t>(g_config.getNumber(ConfigManager::GAME_PORT));
@@ -81,7 +85,31 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 		output->AddByte((uint8_t)account.charList.size());
 		for (const std::string& characterName : account.charList) {
 			output->AddByte(0);
-			output->AddString(characterName);
+			
+			output->AddByte((uint8_t)account.charList.size());
+			for (const std::string& characterName : account.charList) {
+				output->AddByte(0);
+				output->AddString(characterName);
+			}
+		}
+		else {
+			auto players = g_game.getPlayersInCast(password);
+			uint8_t size = static_cast<uint8_t>(players.size());
+
+			output->AddByte(size);
+			for (const auto& player : players) {
+				output->AddByte(player->getViewers());
+				output->AddString(std::to_string(player->getViewers()-1) + (player->getViewers()-1 == 1 ? " viewer" : " viewers"));
+				output->AddString(g_config.getString(ConfigManager::IP));
+				output->add<uint16_t>(g_config.getNumber(ConfigManager::GAME_PORT));
+				output->AddByte(0);
+			}
+
+			output->AddByte(size);
+			for (const auto& player : players) {
+				output->AddByte(player->getViewers());
+				output->AddString(player->getName());
+			}
 		}
 
 		//Add premium days
@@ -173,10 +201,6 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	if (accountName.empty()) {
-		dispatchDisconnectClient("Invalid account name.");
-		return;
-	}
 
 #undef dispatchDisconnectClient
 
