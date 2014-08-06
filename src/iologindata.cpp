@@ -58,6 +58,10 @@ bool IOLoginData::saveAccount(const Account& acc)
 
 bool IOLoginData::loginserverAuthentication(const std::string& name, const std::string& password, Account& account)
 {
+	if (name.empty()) {
+		return true;
+	}
+	
 	Database* db = Database::getInstance();
 
 	std::ostringstream query;
@@ -93,6 +97,10 @@ bool IOLoginData::loginserverAuthentication(const std::string& name, const std::
 
 uint32_t IOLoginData::gameworldAuthentication(const std::string& accountName, const std::string& password, std::string& characterName)
 {
+	if (accountName.empty()) {
+		return true;
+	}
+	
 	Database* db = Database::getInstance();
 
 	std::ostringstream query;
